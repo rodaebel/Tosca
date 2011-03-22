@@ -25,14 +25,19 @@ init([]) ->
     Server = {
         tosca_server, {tosca_server, start_link, []},
 	    permanent, 2000, worker, [tosca_server]},
+
     %% This is the event manager process.
     Event = {
         tosca_event, {gen_event, start_link, [{local, tosca_event}]},
         permanent, 2000, worker, dynamic},
+
+    %% OSC handler module.
+    {ok, Handler} = application:get_env(tosca, handler),
+
     %% Another server process takes over the role of a guard for our event
     %% handler and restarts it in case of an unexpected crash.
     Guard = {
-        tosca_guard, {tosca_guard, start_link, [tosca_handler]},
+        tosca_guard, {tosca_guard, start_link, [Handler]},
 	    permanent, 2000, worker, [tosca_guard]},
 
     {ok, {{one_for_one, 3, 10}, [Server, Event, Guard]}}.
