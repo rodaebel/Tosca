@@ -55,8 +55,6 @@ handle_call(_Request, _From, State) ->
 %% @spec handle_cast(Msg, State) -> {noreply, State}
 handle_cast({message, Address, Args}, #state{socket=Socket} = State) ->
     error_logger:info_msg("~p ~p ~p~n", [self(), Address, Args]),
-    Msg = {message, Address, Args},
-    gen_udp:send(Socket, {10, 0, 1, 3}, 7124, osc_lib:encode(Msg)),
     {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
