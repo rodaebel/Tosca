@@ -1,6 +1,6 @@
-=======
+=====
 Tosca
-=======
+=====
 
 The Tosca project aims at providing a generic Open Sound Control server and
 dispatcher built on top of the Erlang/OTP platform.
@@ -33,3 +33,16 @@ In order to build and run the server, enter the following commands::
 
   $ make
   $ bin/toscad
+
+Optionally, a configuration file can be specified::
+
+  $ bin/toscad --config=tosca.config
+
+
+Running Unit Tests
+------------------
+
+The Tosca project contains a number of unit tests. Run all unit tests by typing
+the following command::
+
+  $ make test

@@ -31,9 +31,9 @@ start_link() ->
 %% @doc Initializes the server.
 %% @spec init(Args) -> {ok, State} | {stop, Reason}
 init([]) ->
-    {ok, Ip} = application:get_env(ip),
-    {ok, Port} = application:get_env(incoming_port),
-    {ok, RecBuf} = application:get_env(recbuf),
+    {ok, Ip} = application:get_env(tosca, ip),
+    {ok, Port} = application:get_env(tosca, incoming_port),
+    {ok, RecBuf} = application:get_env(tosca, recbuf),
     Options = [binary, {ip, Ip}, {active, once}, {recbuf, RecBuf}],
     case gen_udp:open(Port, Options) of
     	{ok, Socket} ->
@@ -53,7 +53,7 @@ handle_call(_Request, _From, State) ->
 %% @private
 %% @doc Handles cast messages.
 %% @spec handle_cast(Msg, State) -> {noreply, State}
-handle_cast({message, Address, Args}, #state{socket=Socket} = State) ->
+handle_cast({message, Address, Args}, #state{socket=_Socket} = State) ->
     error_logger:info_msg("~p ~p ~p~n", [self(), Address, Args]),
     {noreply, State};
 handle_cast(_Msg, State) ->

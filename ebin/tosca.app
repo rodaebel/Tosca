@@ -7,6 +7,6 @@
   {registered, [tosca_sup, tosca_server, tosca_guard]},
   {applications, [kernel, stdlib]},
   {mod, {tosca_app, []}},
-  {env, [{ip, any}, {incoming_port, 7000}, {outgoing_port, 7124}, {recbuf, 8192}]}
+  {env, [{ip,any}, {incoming_port,7000}, {outgoing_port,7124}, {recbuf,8192}]}
  ]}.
 %% vim: set filetype=erlang :
