@@ -18,6 +18,5 @@ clean-docs:
 	rm -f doc/edoc-info doc/*.html doc/*.css doc/*.png
 
 test: compile
-	@$(ERL) -pa ebin -eval \
-	"eunit:test({application,$(APP)}),eunit:test(tosca_zeroconf)" \
+	@$(ERL) -pa ebin -eval "eunit:test({application,$(APP)})" \
 	-noshell -s init stop
