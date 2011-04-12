@@ -250,56 +250,59 @@ is_string_test_() ->
      ?_assertEqual(false, is_string([one,2]))].
 
 %% @doc Encodes args.
-%% @spec encode_args(Args::args()) -> Bytes::binary()
+%% @spec encode_args(Args::args()) -> {Bytes::binary(), Types::string()}
 encode_args(Args) ->
     encode_args(Args, [], []).
 
+%% @doc Encodes args.
+%% @spec encode_args(Args::args(), [], []) -> {Bytes::binary(), Types::string()}
 encode_args([], Acc, Types) ->
-    {list_to_binary(Acc), lists:flatten(Types)};
+    {list_to_binary(lists:reverse(Acc)), lists:reverse(Types)};
 encode_args([{i,Int32}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<Int32:32>>], [Types,$i]);
+    encode_args(Rest, [<<Int32:32>>|Acc], [$i|Types]);
 encode_args([Int32|Rest], Acc, Types) when is_integer(Int32) ->
     encode_args([{i,Int32}|Rest], Acc, Types);
 encode_args([{f,Float}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<Float:32/float>>], [Types,$f]);
+    encode_args(Rest, [<<Float:32/float>>|Acc], [$f|Types]);
 encode_args([Float|Rest], Acc, Types) when is_float(Float) ->
     encode_args([{f,Float}|Rest], Acc, Types);
 encode_args([{s,String}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,encode_string(String)], [Types,$s]);
+    encode_args(Rest, [encode_string(String)|Acc], [$s|Types]);
 encode_args([{b,Blob}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,encode_blob(Blob)], [Types,$b]);
+    encode_args(Rest, [encode_blob(Blob)|Acc], [$b|Types]);
 encode_args([{h,Int64}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<Int64:64>>], [Types,$h]);
+    encode_args(Rest, [<<Int64:64>>|Acc], [$h|Types]);
 encode_args([{time,Seconds,Fractions}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,encode_time({time,Seconds,Fractions})], [Types,$t]);
+    encode_args(Rest, [encode_time({time,Seconds,Fractions})|Acc], [$t|Types]);
 encode_args([immediately|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,encode_time(immediately)], [Types,$t]);
+    encode_args(Rest, [encode_time(immediately)|Acc], [$t|Types]);
 encode_args([{d,Double}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<Double:64/float>>], [Types,$d]);
+    encode_args(Rest, [<<Double:64/float>>|Acc], [$d|Types]);
 encode_args([true|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<>>], [Types,$T]);
+    encode_args(Rest, [<<>>|Acc], [$T|Types]);
 encode_args([false|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<>>], [Types,$F]);
+    encode_args(Rest, [<<>>|Acc], [$F|Types]);
 encode_args([null|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<>>], [Types,$N]);
+    encode_args(Rest, [<<>>|Acc], [$N|Types]);
 encode_args([impulse|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<>>], [Types,$I]);
+    encode_args(Rest, [<<>>|Acc], [$I|Types]);
 encode_args([Symbol|Rest], Acc, Types) when is_atom(Symbol) ->
-    encode_args(Rest, [Acc,encode_string(atom_to_list(Symbol))], [Types,$S]);
+    encode_args(Rest, [encode_string(atom_to_list(Symbol))|Acc], [$S|Types]);
 encode_args([{c,Char}|Rest], Acc, Types) when is_integer(Char) ->
-    encode_args(Rest, [Acc,<<Char:32>>], [Types,$c]);
+    encode_args(Rest, [<<Char:32>>|Acc], [$c|Types]);
 encode_args([{rgba,R,G,B,A}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<R/integer,G/integer,B/integer,A/integer>>],
-                [Types,$r]);
+    encode_args(Rest, [<<R/integer,G/integer,B/integer,A/integer>>|Acc],
+                [$r|Types]);
 encode_args([{midi,Port,Status,Data1,Data2}|Rest], Acc, Types) ->
-    encode_args(Rest, [Acc,<<Port/integer,Status/integer,Data1/binary,Data2/binary>>], [Types,$m]);
+    encode_args(Rest, [<<Port/integer,Status/integer,Data1/binary,Data2/binary>>|Acc], [$m|Types]);
 encode_args([L|Rest], Acc, Types) when is_list(L) ->
     case is_string(L) of
         true ->
             encode_args([{s,L}|Rest], Acc, Types);
         false ->
-            {Bytes, Types2} = encode_args(L, [], []),
-            encode_args(Rest, [Acc,Bytes], [Types,$[,Types2,$]])
+            {Bytes, T} = encode_args(L, [], []),
+            encode_args(Rest, [Bytes|Acc],
+                        lists:flatten([$],lists:reverse(T),$[,Types]))
     end.
 
 %% @hidden
@@ -317,10 +320,10 @@ encode_args_test() ->
 %% @doc Encodes type identifiers
 %% @spec encode_types(Types, []) -> binary()
 encode_types([], Acc) ->
-    pad(list_to_binary([<<$,>>,Acc]), 4);
+    pad(list_to_binary([<<$,>>,lists:reverse(Acc)]), 4);
 encode_types([Type|Rest], Acc) ->
-    encode_types(Rest, [Acc,<<Type/integer>>]).
+    encode_types(Rest, [<<Type/integer>>|Acc]).
 
 %% @hidden
 encode_types_test() ->
-    ?assertEqual(<<44,102,102,0>>, encode_types("ff", [])).
+    ?assertEqual(<<44,115,102,102,105,0,0,0>>, encode_types("sffi", [])).
