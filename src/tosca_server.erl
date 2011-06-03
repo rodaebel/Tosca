@@ -54,7 +54,7 @@ handle_call(_Request, _From, State) ->
 %% @doc Handles cast messages.
 %% @spec handle_cast(Msg, State) -> {noreply, State}
 handle_cast({message, Address, Args}, #state{socket=_Socket} = State) ->
-    error_logger:info_msg("~p ~p ~p~n", [self(), Address, Args]),
+    gen_event:notify(tosca_event, {message, Address, Args}),
     {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
