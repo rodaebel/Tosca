@@ -53,8 +53,8 @@ handle_call(_Request, _From, State) ->
 %% @private
 %% @doc Handles cast messages.
 %% @spec handle_cast(Msg, State) -> {noreply, State}
-handle_cast({message, Address, Args}, #state{socket=_Socket} = State) ->
-    gen_event:notify(tosca_event, {message, Address, Args}),
+handle_cast({message, Address, Args}, #state{socket=Socket} = State) ->
+    gen_event:notify(tosca_event, {{message, Address, Args}, Socket}),
     {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
