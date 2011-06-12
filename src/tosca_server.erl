@@ -31,9 +31,9 @@ start_link() ->
 %% @doc Initializes the server.
 %% @spec init(Args) -> {ok, State} | {stop, Reason}
 init([]) ->
-    {ok, Ip} = application:get_env(tosca, ip),
-    {ok, Port} = application:get_env(tosca, incoming_port),
-    {ok, RecBuf} = application:get_env(tosca, recbuf),
+    Ip      = get_config(ip),
+    Port    = get_config(incoming_port),
+    RecBuf  = get_config(recbuf),
     Options = [binary, {ip, Ip}, {active, once}, {recbuf, RecBuf}],
     case gen_udp:open(Port, Options) of
     	{ok, Socket} ->
@@ -42,6 +42,24 @@ init([]) ->
 	    {error, Reason} ->
 	        error_logger:error_report({?MODULE, udp_open, Reason}),
 	        {stop, {?MODULE, udp_open, Reason}}
+    end.
+
+%% @private
+%% @doc Get configuration value for given key.
+%% @spec get_config(Key) -> Value::term()
+get_config(Key) ->
+    case init:get_argument(Key) of
+        {ok, Value} when Key =:= incoming_port orelse Key =:= outgoing_port ->
+            list_to_integer(lists:flatten(Value));
+        {ok, Value} ->
+            Value;
+        _ ->
+            case application:get_env(tosca, Key) of
+                {ok, Value} ->
+                    Value;
+                _ ->
+                    {error, unknown_key}
+            end
     end.
 
 %% @private
